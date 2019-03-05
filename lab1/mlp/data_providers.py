@@ -133,11 +133,11 @@ class MNISTDataProvider(DataProvider):
         super(MNISTDataProvider, self).__init__(
             inputs, targets, batch_size, max_num_batches, shuffle_order, rng)
 
-    # def next(self):
-    #    """Returns next data batch or raises `StopIteration` if at end."""
-    #    inputs_batch, targets_batch = super(MNISTDataProvider, self).next()
-    #    return inputs_batch, self.to_one_of_k(targets_batch)
-    #
+    def next(self):
+        """Returns next data batch or raises `StopIteration` if at end."""
+        inputs_batch, targets_batch = super(MNISTDataProvider, self).next()
+        return inputs_batch, self.to_one_of_k(targets_batch)
+
     def __next__(self):
         return self.next()
 
@@ -156,7 +156,10 @@ class MNISTDataProvider(DataProvider):
             to zero except for the column corresponding to the correct class
             which is equal to one.
         """
-        raise NotImplementedError()
+        encoded_targets = np.zeros((int_targets.shape[0], self.num_classes))
+        for i, int_target in enumerate(int_targets):
+            encoded_targets[i][int_target] = 1
+        return encoded_targets
 
 
 class MetOfficeDataProvider(DataProvider):
@@ -187,20 +190,31 @@ class MetOfficeDataProvider(DataProvider):
         assert os.path.isfile(data_path), (
             'Data file does not exist at expected path: ' + data_path
         )
-        # load raw data from text file
-        # ...
-        # filter out all missing datapoints and flatten to a vector
-        # ...
+        # load raw data from text file and skip first 3 metadata rows
+        raw = np.loadtxt(data_path, skiprows=3)
+        # remove year & month columns as we don't need them
+        raw = np.delete(raw, [0, 1], axis=1)
+        # filter out all missing datapoints (-99.99) and flatten to a vector
+        cleaned = raw[raw >= 0]
+        flattened = cleaned.flatten()
         # normalise data to zero mean, unit standard deviation
-        # ...
+        normalised = (cleaned - cleaned.mean()) / cleaned.std()
+
         # convert from flat sequence to windowed data
-        # ...
+        n_windows = int(len(normalised) / self.window_size)
+        # trim to the expected shape based on window size
+        diff = len(normalised) - n_windows * self.window_size
+        if diff != 0:
+            normalised = normalised[:-diff]
+        windowed = normalised.reshape((n_windows, self.window_size))
+
         # inputs are first (window_size - 1) entries in windows
-        # inputs = ...
+        inputs = windowed[:, :-1]
         # targets are last entry in windows
-        # targets = ...
+        targets = windowed[:, -1]
         # initialise base class with inputs and targets arrays
-        # super(MetOfficeDataProvider, self).__init__(
-        #     inputs, targets, batch_size, max_num_batches, shuffle_order, rng)
+        super(MetOfficeDataProvider, self).__init__(
+            inputs, targets, batch_size, max_num_batches, shuffle_order, rng)
+
     def __next__(self):
-            return self.next()
+        return self.next()
