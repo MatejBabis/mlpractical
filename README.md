@@ -1,4 +1,4 @@
- 💻 **NOTE**: My take on a solution can be found in each lab's corresponding `.ipynb` file.
+ 💻 ***NOTE**: My take on a solution can be found in each lab's corresponding `.ipynb` file.*
  
 
 # Machine Learning Practical
