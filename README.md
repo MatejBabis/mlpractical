@@ -1,3 +1,6 @@
+ 💻 **NOTE**: My take on a solution can be found in each lab's corresponding `.ipynb` file.
+ 
+
 # Machine Learning Practical
 
 This repository contains the code for the University of Edinburgh [School of Informatics](http://www.inf.ed.ac.uk) course [Machine Learning Practical](http://www.inf.ed.ac.uk/teaching/courses/mlp/).
